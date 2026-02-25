@@ -1,5 +1,6 @@
-NAME = HttpServer
-SRCS = main.cpp FileDescriptor.cpp Listener.cpp Connection.cpp
+NAME = httpServer
+SRCS = main.cpp FileDescriptor.cpp Listener.cpp Connection.cpp \
+	ThreadSafeQueue.cpp ThreadPool.cpp
 OBJS = $(SRCS:.cpp=.o)
 CXX = c++
 CXXFLAGS = -std=c++20 -Wall -Wextra -Werror

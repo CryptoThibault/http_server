@@ -10,7 +10,7 @@ void Connection::handle_request() {
     char buffer[1024];
     ssize_t bytes = ::read(fd_.get(), buffer, sizeof(buffer) - 1);
     if (bytes <= 0) {
-        std::cerr << "Lecture échouée ou client fermé" << std::endl;
+        std::cerr << "Read failed or client closed" << std::endl;
         return;
     }
 
