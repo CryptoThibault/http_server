@@ -6,7 +6,7 @@
 
 class ThreadSafeQueue {
 public:
-    ThreadSafeQueue() = default;
+    ThreadSafeQueue() : stopped_(false) {}
     ~ThreadSafeQueue() = default;
 
     ThreadSafeQueue(const ThreadSafeQueue&) = delete;
@@ -18,8 +18,10 @@ public:
     void push(Connection&& conn);
     Connection pop();
     void notify_all();
+    void stop();
 private:
     std::queue<Connection> queue_;
     std::mutex mutex_;
     std::condition_variable cond_;
+    bool stopped_;
 };

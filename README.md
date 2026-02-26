@@ -4,10 +4,10 @@ A modular, RAII-safe C++20 HTTP server that efficiently handles client connectio
 
 ## Features
 
-- Listener class with RAII-managed socket (`FileDescriptor`)
-- Connection class for minimal HTTP GET request handling
-- Mono-threaded server (Phase 2)
-- Ready for multi-threaded architecture with thread pool (Phase 3)
+- Listener class with RAII-managed socket (FileDescriptor) ensuring proper cleanup
+- Connection class capable of parsing minimal HTTP GET requests and sending responses
+- Mono-threaded server for initial testing and prototyping
+- Ready for multi-threaded architecture using a thread pool with ThreadSafeQueue
 
 ## Build
 make

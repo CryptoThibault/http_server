@@ -13,5 +13,4 @@ public:
 private:
     std::vector<std::thread> workers_;
     ThreadSafeQueue& queue_;
-    bool running_;
 };

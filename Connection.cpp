@@ -35,3 +35,7 @@ void Connection::handle_request() {
         ::write(fd_.get(), response, std::strlen(response));
     }
 }
+
+int Connection::get_fd() const {
+    return fd_.get();
+};

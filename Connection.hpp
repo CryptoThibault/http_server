@@ -13,7 +13,7 @@ public:
     Connection& operator=(Connection&&) noexcept = default;
 
     void handle_request();
-    int get_fd() const noexcept { return fd_.get(); }
+    int get_fd() const;
 private:
     FileDescriptor fd_;
 };

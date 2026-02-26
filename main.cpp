@@ -6,15 +6,13 @@
 #include <iostream>
 #include <cstdlib>
 #include <csignal>
-#include <atomic>
 
-// std::atomic<bool> running(true);
+std::atomic<bool> running(true);
 
-// void signal_handler(int signum) {
-//     (void)signum;
-//     std::cout << "\n[INFO] Signal received, shutting down..." << std::endl;
-//     running = false;
-// }
+void signal_handler(int) {
+    std::cout << "\n[INFO] Signal received, shutting down..." << std::endl;
+    running = false;
+}
 
 int main(int argc, char* argv[]) {
     if (argc != 2) {
@@ -28,7 +26,7 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    // std::signal(SIGINT, signal_handler);
+    std::signal(SIGINT, signal_handler);
     
     try {
         Listener listener(static_cast<uint16_t>(port));
@@ -38,10 +36,8 @@ int main(int argc, char* argv[]) {
         size_t numThreads = 4;
         ThreadPool pool(numThreads, queue);
 
-        while (true) {
+        while (running) {
             int client_fd = listener.accept();
-            std::cout << "[INFO] New connection accepted: fd=" << client_fd << std::endl;
-
             Connection conn(client_fd);
             queue.push(std::move(conn));
         }

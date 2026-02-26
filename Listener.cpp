@@ -3,8 +3,6 @@
 #include <netinet/in.h>
 #include <unistd.h>
 #include <stdexcept>
-#include <errno.h>
-#include <fcntl.h>
 
 Listener::Listener(uint16_t port) : port_(port) {
     fd_ = ::socket(AF_INET, SOCK_STREAM, 0);
@@ -33,24 +31,3 @@ int Listener::accept() {
         throw std::runtime_error("Accept failed");
     return client_fd;
 }
-
-// int Listener::accept_non_blocking() {
-//     int client_fd = ::accept(fd_.get(), nullptr, nullptr);
-//     if (client_fd < 0) {
-//         if (errno == EAGAIN || errno == EWOULDBLOCK)
-//             return -1;
-//         else
-//             throw std::runtime_error("accept failed");
-//     }
-//     return client_fd;
-// }
-
-// void Listener::set_non_blocking(bool nb) {
-//     non_blocking_ = nb;
-//     int flags = fcntl(fd_.get(), F_GETFL, 0);
-//     if (flags == -1) flags = 0;
-//     if (nb)
-//         fcntl(fd_.get(), F_SETFL, flags | O_NONBLOCK);
-//     else
-//         fcntl(fd_.get(), F_SETFL, flags & ~O_NONBLOCK);
-// }

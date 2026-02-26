@@ -15,9 +15,6 @@ public:
     Listener& operator=(Listener&&) noexcept = default;
 
     int accept();
-    // int accept_non_blocking();
-    // void set_non_blocking(bool nb);
-    // int get_fd() const noexcept { return fd_.get(); }
 private:
     FileDescriptor fd_;
     uint16_t port_;
