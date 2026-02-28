@@ -19,13 +19,17 @@ A modular, RAII-safe C++20 HTTP server that efficiently handles client connectio
 ## Connect via curl or a browser:
 
 ### GET
-`curl http://localhost:8080/`
-`curl http://localhost:8080/hi`
-`curl http://localhost:8080/about`
-`curl http://localhost:8080/html`
-`curl http://localhost:8080/c++`
+```sh
+curl http://localhost:8080/
+curl http://localhost:8080/hi
+curl http://localhost:8080/about
+curl http://localhost:8080/html
+curl http://localhost:8080/c++
+```
 
 ### POST
-`curl -d "Hello World" -X POST http://localhost:8080/`
-`curl -d "Hello World" -X POST http://localhost:8080/echo`
-`curl -d "Hello World" -X POST http://localhost:8080/reverse`
+```sh
+curl -d "Hello World" -X POST http://localhost:8080/
+curl -d "Hello World" -X POST http://localhost:8080/echo
+curl -d "Hello World" -X POST http://localhost:8080/reverse
+```
