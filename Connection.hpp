@@ -1,9 +1,10 @@
 #pragma once
 #include "FileDescriptor.hpp"
+#include <iostream>
 
 class Connection {
 public:
-    explicit Connection(int client_fd);
+    explicit Connection(int fd);
     ~Connection() noexcept = default;
 
     Connection(const Connection&) = delete;
@@ -16,5 +17,9 @@ public:
     int get_fd() const;
 private:
     FileDescriptor fd_;
+
+    void handle_get(const std::string& path);
+    void handle_post(const std::string& path, const std::string& body);
+    void send_response(int status_code, const std::string& body, const std::string& content_type = "text/plain");
 };
 

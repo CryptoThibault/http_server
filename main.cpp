@@ -26,7 +26,7 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    std::signal(SIGINT, signal_handler);
+    //std::signal(SIGINT, signal_handler);
     
     try {
         Listener listener(static_cast<uint16_t>(port));
