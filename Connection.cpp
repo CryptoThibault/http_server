@@ -1,8 +1,14 @@
 #include "Connection.hpp"
 #include <unistd.h>
+#include <sys/socket.h>
+#include <cerrno>
 #include <cstring>
 #include <sstream>
 #include <algorithm>
+
+#include <atomic>
+
+extern std::atomic<bool> running;
 
 Connection::Connection(int fd) : fd_(fd) {}
 
@@ -11,24 +17,42 @@ void Connection::handle_request() {
     char buf[1024];
     ssize_t n;
 
-    // Lire tout ce qui est disponible pour commencer
-    while ((n = read(fd_.get(), buf, sizeof(buf))) > 0) {
-        request.append(buf, n);
-        // si on a lu une ligne vide "\r\n\r\n", on a tous les headers
-        if (request.find("\r\n\r\n") != std::string::npos) break;
-    }
+    struct timeval tv{1,0};
+    setsockopt(fd_.get(), SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv));
 
-    if (n < 0) {
-        std::cerr << "[ERROR] read failed\n";
+    while (true) {
+        n = read(fd_.get(), buf, sizeof(buf));
+        if (n > 0) {
+            request.append(buf, n);
+            if (request.find("\r\n\r\n") != std::string::npos)
+                break;
+            continue;
+        }
+
+        if (n == 0) {
+            break;
+        }
+
+        if (errno == EAGAIN || errno == EWOULDBLOCK) {
+            if (!running)
+                return;
+            else
+                continue;
+        }
+
+        std::cerr << "[ERROR] read failed: " << strerror(errno) << "\n";
         return;
     }
 
-    // Séparer headers et body initial
-    size_t header_end = request.find("\r\n\r\n");
-    std::string headers = request.substr(0, header_end);
-    std::string body = request.substr(header_end + 4); // body déjà reçu dans buffer
+    if (request.empty())
+        return;
 
-    // Lire Content-Length pour savoir s'il reste à lire
+    size_t header_end = request.find("\r\n\r\n");
+    if (header_end == std::string::npos)
+        return;
+    std::string headers = request.substr(0, header_end);
+    std::string body = request.substr(header_end + 4); // initial body data
+
     size_t content_length = 0;
     std::istringstream header_stream(headers);
     std::string line;
@@ -38,7 +62,6 @@ void Connection::handle_request() {
         }
     }
 
-    // Lire le reste du body si nécessaire
     while (body.size() < content_length) {
         char temp[1024];
         ssize_t m = read(fd_.get(), temp, sizeof(temp));
@@ -46,7 +69,6 @@ void Connection::handle_request() {
         body.append(temp, m);
     }
 
-    // Récupérer method et path depuis la première ligne
     std::istringstream first_line(headers);
     std::string method, path;
     first_line >> method >> path;
@@ -97,6 +119,7 @@ void Connection::send_response(int status_code, const std::string& body, const s
              << "\r\n";
     response << "Content-Type: " << content_type << "\r\n";
     response << "Content-Length: " << body.size() << "\r\n";
+    response << "Connection: close\r\n";
     response << "\r\n";
     response << body << "\n";
 

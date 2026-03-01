@@ -6,18 +6,23 @@
 #include <iostream>
 #include <cstdlib>
 #include <csignal>
+#include <atomic>
 
 std::atomic<bool> running(true);
-std::atomic<int> port(8080);
+int g_listen_fd = -1;
 
 void signal_handler(int) {
-    std::cout << "\n[INFO] Signal received, pressing Ctrl+C to confirm." << std::endl;
+    std::cout << "\n[INFO] Signal received, shutting down..." << std::endl;
     running = false;
-    std::string cmd = "curl -s http://127.0.0.1:" + std::to_string(port) + " > /dev/null";
-    system(cmd.c_str());
+    if (g_listen_fd >= 0) {
+        ::close(g_listen_fd);
+        g_listen_fd = -1;
+    }
 }
 
 int main(int argc, char* argv[]) {
+    int port = 8080;
+
     if (argc != 1 && argc != 2) {
         std::cerr << "Usage: " << argv[0] << " [port]" << std::endl;
         return 1;
@@ -43,9 +48,8 @@ int main(int argc, char* argv[]) {
 
         while (running) {
             int client_fd = listener.accept();
-            if (!running) break;
-            Connection conn(client_fd);
-            queue.push(std::move(conn));
+            if (client_fd < 0) break;
+            queue.push(Connection(client_fd));
         }
         
     } catch (const std::exception& e) {
