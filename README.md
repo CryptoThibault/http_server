@@ -7,7 +7,7 @@ A modular, RAII-safe C++20 HTTP server that efficiently handles client connectio
 
 - **RAII-safe Listener:** Socket properly managed via `FileDescriptor` for automatic cleanup when closed.
 
-- **Multi-threading Ready:** Initial mono-threaded server for testing, easily extendable with a **thread pool** and **ThreadSafeQueue** to handle high concurrency.
+- **Multi-threading Ready:** Initial mono-threaded server for testing, easily extendable with a thread pool and a thread safe queue to handle high concurrency.
 
 - **Robust HTTP Request Handling:** Server parses headers and bodies for both GET and POST requests, handles unexpected client disconnects gracefully, and remains stable under high load.
 
