@@ -4,8 +4,9 @@
 #include <cerrno>
 #include <cstring>
 #include <sstream>
+#include <fstream>
+#include <vector>
 #include <algorithm>
-
 #include <atomic>
 
 extern std::atomic<bool> running;
@@ -28,18 +29,14 @@ void Connection::handle_request() {
                 break;
             continue;
         }
-
-        if (n == 0) {
+        if (n == 0)
             break;
-        }
-
         if (errno == EAGAIN || errno == EWOULDBLOCK) {
             if (!running)
                 return;
             else
                 continue;
         }
-
         std::cerr << "[ERROR] read failed: " << strerror(errno) << "\n";
         return;
     }
@@ -51,7 +48,7 @@ void Connection::handle_request() {
     if (header_end == std::string::npos)
         return;
     std::string headers = request.substr(0, header_end);
-    std::string body = request.substr(header_end + 4); // initial body data
+    std::string body = request.substr(header_end + 4);
 
     size_t content_length = 0;
     std::istringstream header_stream(headers);
@@ -79,24 +76,39 @@ void Connection::handle_request() {
 }
 
 void Connection::handle_get(const std::string& path) {
-    if (path == "/") {
-        send_response(200, "Hello, World!");
-    } else if (path == "/hi") {
-        send_response(200, "Hi there!");
-    } else if (path == "/about") {
-        send_response(200, "This is a demo server");
-    } else if (path == "/html") {
-        send_response(200, "<!DOCTYPE html><html><body><h1>HTML Response</h1><p>This is an HTML response.</p></body></html>", "text/html");
-    } else if (path == "/c++") {
-        send_response(200, "#include <iostream>\n\nint main() {\n    std::cout << \"Hello from C++\" << std::endl;\n    return 0;\n}", "text/plain");
-    } else {
-        send_response(404, "Not Found");
+    std::cout << "[INFO] Received GET " << path << std::endl;
+
+    std::string clean = sanitize_path(path);
+    if (clean.empty()) {
+        send_response(400, "Bad Request\n");
+        return;
     }
+
+    std::string file_path = "./www" + clean;
+    if (clean == "/")
+        file_path = "./www/index.html";
+
+    std::ifstream file(file_path);
+    if (!file) {
+        send_response(404, "Not Found\n");
+        return;
+    }
+
+    std::string ext = get_extension(file_path);
+    std::string content_type = "application/octet-stream";
+    if (ext == ".html") content_type = "text/html";
+    else if (ext == ".css") content_type = "text/css";
+    else if (ext == ".js") content_type = "application/javascript";
+    else if (ext == ".png") content_type = "image/png";
+    else if (ext == ".jpg" || ext == ".jpeg") content_type = "image/jpeg";
+    else if (ext == ".ico") content_type = "image/x-icon"; 
+    
+    std::string body((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+    send_response(200, body, content_type);
 }
 
 void Connection::handle_post(const std::string& path, const std::string& body) {
-    std::cout << "[INFO] Received POST request" << std::endl;
-    std::cout << "[INFO] Path: " << path << std::endl;
+    std::cout << "[INFO] Received POST " << path << std::endl;
     std::cout << "[INFO] Body:\n" << body << std::endl;
 
     if (path == "/") {
@@ -112,22 +124,44 @@ void Connection::handle_post(const std::string& path, const std::string& body) {
     }
 }
 
-void Connection::send_response(int status_code, const std::string& body, const std::string& content_type) {
-    std::ostringstream response;
-    response << "HTTP/1.1 " << status_code << " "
-             << (status_code == 200 ? "OK" : (status_code == 404 ? "Not Found" : "Error")) 
-             << "\r\n";
-    response << "Content-Type: " << content_type << "\r\n";
-    response << "Content-Length: " << body.size() << "\r\n";
-    response << "Connection: close\r\n";
-    response << "\r\n";
-    response << body << "\n";
+void Connection::send_response(int status,  const std::string& body, const std::string& content_type) {
+    std::ostringstream header;
+    header << "HTTP/1.1 " << status << " OK\r\n"
+           << "Content-Length: " << body.size() << "\r\n"
+           << "Content-Type: " << content_type << "\r\n"
+           << "\r\n";
 
-    const std::string resp_str = response.str();
-    ssize_t bytes_written = write(fd_.get(), resp_str.c_str(), resp_str.size());
-    if (bytes_written < 0) {
-        std::cerr << "[ERROR] Failed to write to client: " << strerror(errno) << std::endl;
+    std::string header_str = header.str();
+    ::write(fd_.get(), header_str.c_str(), header_str.size());
+    ::write(fd_.get(), body.data(), body.size());
+}
+
+std::string Connection::sanitize_path(const std::string& raw) {
+    if (raw.empty() || raw[0] != '/')
+        return {};
+    std::vector<std::string> parts;
+    std::istringstream iss(raw);
+    std::string tok;
+    while (std::getline(iss, tok, '/')) {
+        if (tok.empty() || tok == ".") continue;
+        if (tok == "..") {
+            if (!parts.empty()) parts.pop_back();
+        } else {
+            parts.push_back(tok);
+        }
     }
+    std::string clean = "/";
+    for (size_t i = 0; i < parts.size(); ++i) {
+        clean += parts[i];
+        if (i + 1 < parts.size()) clean += "/";
+    }
+    return clean;
+}
+
+std::string Connection::get_extension(const std::string& path) {
+    size_t pos = path.find_last_of('.');
+    if (pos == std::string::npos) return "";
+    return path.substr(pos);
 }
 
 int Connection::get_fd() const {

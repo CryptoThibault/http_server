@@ -20,6 +20,8 @@ private:
 
     void handle_get(const std::string& path);
     void handle_post(const std::string& path, const std::string& body);
-    void send_response(int status_code, const std::string& body, const std::string& content_type = "text/plain");
+    void send_response(int status, const std::string& body, const std::string& content_type = "text/plain");
+    std::string sanitize_path(const std::string& raw);
+    std::string get_extension(const std::string& path);
 };
 
