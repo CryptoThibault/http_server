@@ -4,7 +4,6 @@ A modular, RAII-safe C++20 HTTP server that efficiently handles client connectio
 
 ## Features
 
-
 - **RAII-safe Listener:** Socket properly managed via `FileDescriptor` for automatic cleanup when closed.
 
 - **Multi-threading Ready:** Initial mono-threaded server for testing, easily extendable with a thread pool and a thread safe queue to handle high concurrency.
@@ -28,6 +27,7 @@ A modular, RAII-safe C++20 HTTP server that efficiently handles client connectio
 `./httpServer 8080`
 
 ## Connect via curl or a browser:
+
 ### GET
 ```sh
 curl http://localhost:8080/
@@ -38,6 +38,7 @@ curl http://localhost:8080/script.js
 curl http://localhost:8080/images/logo.png
 curl http://localhost:8080/favicon.ico
 ```
+
 ### POST
 ```sh
 curl -d "Hello World" -X POST http://localhost:8080/
