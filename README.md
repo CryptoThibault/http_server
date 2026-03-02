@@ -12,39 +12,22 @@ A modular, RAII-safe C++20 HTTP server that efficiently handles client connectio
   Initial mono-threaded server for testing, easily extendable with a **thread pool** and **ThreadSafeQueue** to handle high concurrency.
 
 - **Robust HTTP Request Handling**  
-  - Parses headers and body for GET and POST requests  
-  - Handles unexpected client disconnects  
-  - Stable under high load (`ab -n 100000 -c 1000` tested)
+  Server parses headers and bodies for both GET and POST requests, handles unexpected client disconnects gracefully, and remains stable under high load
 
 - **GET and POST Support**  
-  - GET: serves HTML, CSS, JS, PNG, JPG, and ICO files  
-  - POST: `/echo` and `/reverse` endpoints for testing request body  
-  - Properly reads and logs POST bodies
+  Server handles GET requests to serve HTML, CSS, JS, PNG, JPG, and ICO files, provides POST endpoints /echo and /reverse and properly reads and logs POST data
 
 - **Path Sanitization & Security**  
-  - Protects against `../` directory traversal attacks  
-  - Uses `std::filesystem::canonical` to validate paths
+  Protects against `../` directory traversal attacks with a path sanitizer
 
 - **Binary File Support**  
-  - Reads files in binary mode for images and scripts  
-  - Sets proper `Content-Type` automatically based on file extension
-
-- **Interactive Web Page**  
-  - Responsive HTML page with title, paragraph, button, and image  
-  - “Show/Hide Image” button controlled with JavaScript  
-  - Modern CSS layout, centered and mobile-friendly
-
-- **Favicon Support**  
-  - Serves `favicon.ico` correctly in the browser tab  
-  - Proper `Content-Type: image/x-icon`
+  Reads files in binary mode for images and scripts and sets proper `Content-Type` automatically based on file extension
 
 - **Graceful Shutdown**  
-  - Ctrl+C closes the server cleanly  
-  - No memory leaks or dangling sockets
+  Ctrl+C closes the server cleanly with no memory leaks or dangling sockets
 
 - **Easy Testing**  
-  - Compatible with `curl` or any browser  
-  - Example GET and POST requests included
+  Compatible with `curl` or any browser
 
 ## Build
 `make`
